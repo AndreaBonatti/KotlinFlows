@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Button
 import androidx.compose.material.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
@@ -16,6 +17,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kotlinflows.ui.theme.KotlinFlowsTheme
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -31,6 +33,14 @@ class MainActivity : ComponentActivity() {
             val count = viewModel.stateFlow.collectAsState(initial = 0)
 //            viewModel.stateFlow.value = 10 // The UI can not change directly the value of a flow
             KotlinFlowsTheme {
+
+                // to simulate this one-time event in Compose
+                LaunchedEffect(key1 = true) {
+                    viewModel.sharedFlow.collect { number ->
+
+                    }
+                }
+
                 Box(modifier = Modifier.fillMaxSize()) {
 //                    Text(
 //                        text = time.value.toString(),
@@ -52,7 +62,7 @@ class MainActivity : ComponentActivity() {
 //            }
 //        }
         collectLatestLifecycleFlow(viewModel.stateFlow) { number ->
-            binding.tvCounter.text = number.toString()
+//            binding.tvCounter.text = number.toString()
         }
     }
 }

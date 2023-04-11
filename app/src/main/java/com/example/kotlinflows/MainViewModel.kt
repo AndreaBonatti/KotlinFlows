@@ -34,8 +34,39 @@ class MainViewModel : ViewModel() {
         MutableStateFlow(0) // mutable version tha only the viewModel can modify
     val stateFlow = _stateFlow.asStateFlow() // immutable version for the UI
 
+    // SharedFlow is used to send one-time event e.g. log-in event, navigation event, ...
+    // StateFlow re-emit the same event if the screen is rotated, SharedFlow no
+    // SharedFlow is a cold flow => no collector === event sent lost
+    private val _sharedFlow =
+        MutableSharedFlow<Int>() // mutable version tha only the viewModel can modify
+    // The sharedFlow can cache x emissions of the same  flow by using the replay parameter
+//    private val _sharedFlow =
+//        MutableSharedFlow<Int>(replay = 5) // 5 emissions cached
+    val sharedFlow = _sharedFlow.asSharedFlow() // immutable version for the UI
+
     init {
-        collectFlow()
+//        collectFlow()
+//        squareNumber(3) here the shared flow not works because there is no collector
+        // with replay version can works even here
+        viewModelScope.launch {
+            sharedFlow.collect {
+                delay(2000L)
+                println("1ST FLOW: The received number is: $it")
+            }
+        }
+        viewModelScope.launch {
+            sharedFlow.collect {
+                delay(3000L)
+                println("2ND FLOW: The received number is: $it")
+            }
+        }
+        squareNumber(3)
+    }
+
+    fun squareNumber(number: Int) {
+        viewModelScope.launch {
+            _sharedFlow.emit(number * number)
+        }
     }
 
     fun incrementCounter() {
