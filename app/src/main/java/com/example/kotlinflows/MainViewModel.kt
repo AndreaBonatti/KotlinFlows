@@ -22,9 +22,24 @@ class MainViewModel : ViewModel() {
             emit(currentValue)
         }
     }
+    // up here there is a cold flow
+    // cold flow === no collector => do anything
+    // hot flow === do something even if there are no collectors
+
+    // StateFlow = follow tha contains a state with a single value
+    // like liveData without the lifecycle awareness
+    // (flow can not detect when activity goes in the background)
+    // it is an hot flow
+    private val _stateFlow =
+        MutableStateFlow(0) // mutable version tha only the viewModel can modify
+    val stateFlow = _stateFlow.asStateFlow() // immutable version for the UI
 
     init {
         collectFlow()
+    }
+
+    fun incrementCounter() {
+        _stateFlow.value += 1
     }
 
     // [[1, 2, 3], [1, 2]]
@@ -110,10 +125,10 @@ class MainViewModel : ViewModel() {
 //                .buffer()// The part below runs in a different coroutine
                 .conflate()// The part below runs in a different coroutine, go to the latest emissions
                 .collect {
-                println("FLOW: Now eating $it")
-                delay(1500L)
-                println("FLOW: Finished eating $it")
-            }
+                    println("FLOW: Now eating $it")
+                    delay(1500L)
+                    println("FLOW: Finished eating $it")
+                }
         }
     }
 }
