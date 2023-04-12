@@ -2,13 +2,13 @@ package com.example.kotlinflows
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class MainViewModel : ViewModel() {
+class MainViewModel(
+    private val dispatcher: DispatcherProvider
+) : ViewModel() {
 
     // Flow = coroutine that can emit multiple values over a period of time
     val countdownFlow = flow<Int> {
@@ -21,7 +21,7 @@ class MainViewModel : ViewModel() {
             currentValue--
             emit(currentValue)
         }
-    }
+    }.flowOn(dispatcher.main) // to set flow on a chosen dispatcher
     // up here there is a cold flow
     // cold flow === no collector => do anything
     // hot flow === do something even if there are no collectors
@@ -39,6 +39,7 @@ class MainViewModel : ViewModel() {
     // SharedFlow is a cold flow => no collector === event sent lost
     private val _sharedFlow =
         MutableSharedFlow<Int>() // mutable version tha only the viewModel can modify
+
     // The sharedFlow can cache x emissions of the same  flow by using the replay parameter
 //    private val _sharedFlow =
 //        MutableSharedFlow<Int>(replay = 5) // 5 emissions cached
@@ -48,13 +49,13 @@ class MainViewModel : ViewModel() {
 //        collectFlow()
 //        squareNumber(3) here the shared flow not works because there is no collector
         // with replay version can works even here
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher.main) {
             sharedFlow.collect {
                 delay(2000L)
                 println("1ST FLOW: The received number is: $it")
             }
         }
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher.main) {
             sharedFlow.collect {
                 delay(3000L)
                 println("2ND FLOW: The received number is: $it")
@@ -64,7 +65,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun squareNumber(number: Int) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher.main) {
             _sharedFlow.emit(number * number)
         }
     }
